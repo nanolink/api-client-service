@@ -1,0 +1,26 @@
+{
+  "name": "api-client-service",
+  "version": "1.0.0",
+  "description": "Reference project using the Nanolink API",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nanolink/api-client-service.git"
+  },
+  "author": "Mogens Bak Nielsen",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nanolink/api-client-service/issues"
+  },
+  "homepage": "https://github.com/nanolink/api-client-service#readme",
+  "dependencies": {
+    "axios": "^0.26.1",
+    "global-agent": "^3.0.0",
+    "graphql-subscriptions-client": "^0.16.3",
+    "level": "^7.0.1",
+    "ws": "^8.5.0"
+  }
+}

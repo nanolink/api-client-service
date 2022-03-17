@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  apiclientservice:
+    image: apiclientservice
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: production
+      CORESERVER: https://test01.nanolink.com:8032
+      APITOKEN: "<PUT VALID APITOKEN IN HERE>"
+    ports:
+      - 3000:3000
