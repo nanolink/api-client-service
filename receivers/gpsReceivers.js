@@ -1,38 +1,27 @@
+const { Connection } = require("@nanolink/nanolink-tools/lib");
 const { StateSubscriptions } = require("../definitions/stateSubscriptions");
 
 /**
  * Class to handle GPS updates.
  */
 class GPSReceiver {
-  handler;
+  connection;
   /**
    *
-   * @param {SubscriptionHandler} handler - The main subscription handler
+   * @param {Connection} connection - The connection handler
    */
-  constructor(handler) {
-    this.handler = handler;
+  constructor(connection) {
+    this.connection = connection;
   }
   /**
    *
    * @param {boolean} unwind - If true only single updates are sent to onDateReceived, otherwise it's an array
    */
   async run(unwind) {
-    if (unwind) {
-      let sub = this.handler.wrapBulk(
-        await this.handler.subscribe(StateSubscriptions.gps),
-        (n) => n.otrackers_getpositionsbulk
-      );
-      for await (let r of sub) {
-        if (r.data) {
-          this.onDataReceived(r.data);
-        }
-      }
-    } else {
-      let sub = await this.handler.subscribe(StateSubscriptions.gps);
-      for await (let r of sub) {
-        if (r.otrackers_getpositionsbulk.data) {
-          this.onDataReceived(r.otrackers_getpositionsbulk.data);
-        }
+    let iter = await this.connection.subscribe(StateSubscriptions.gps, unwind);
+    for await (let r of iter) {
+      if (r.data) {
+        this.onDataReceived(r.data);
       }
     }
   }
