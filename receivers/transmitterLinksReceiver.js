@@ -1,20 +1,21 @@
+const { Connection } = require("@nanolink/nanolink-tools/lib");
 const { StateSubscriptions } = require("../definitions/stateSubscriptions");
 
 /**
  * Class for handling transmitterlinks
  */
 class TransmitterLinksReceiver {
-  handler;
+  connection;
   receiverTypes;
   onlyWhenNearestChange;
   /**
    *
-   * @param {SubscriptionHandler} handler - The main subscription handler
+   * @param {Connection} connection - The connection handler
    * @param {string} receiverTypes - Array of tracker types. Valid values: BLE_TRACKER, GPS_TRACKER, GPS_GATE_TRACKER, LAN_GATE_TRACKER, MOBILE_TRACKER, MESH_GATE_TRACKER, CROWD_TRACKER
    * @param {boolean} onlyWhenNearestChange Tells the subscription to only sent updates if the nearest link changes.
    */
-  constructor(handler, receiverTypes, onlyWhenNearestChange) {
-    this.handler = handler;
+  constructor(connection, receiverTypes, onlyWhenNearestChange) {
+    this.connection = connection;
     this.receiverTypes = receiverTypes;
     this.onlyWhenNearestChange = onlyWhenNearestChange;
   }
@@ -26,44 +27,22 @@ class TransmitterLinksReceiver {
    * @param {boolean} includeNearest - if true the nearest link is resolved according to RSSI
    */
   async run(unwind, includeLinks, includeNewest, includeNearest) {
-    if (unwind) {
-      let sub = this.handler.wrapBulk(
-        await this.handler.subscribe(
-          StateSubscriptions.transmitterLinks(
-            includeLinks,
-            includeNewest,
-            includeNearest
-          ),
-          {
-            subscribe: true,
-            receiverTypes: this.receiverTypes,
-            onlyWhenNearestChange: this.onlyWhenNearestChange,
-          }
-        ),
-        (n) => n.otrackers_transmitterlinksbulk
-      );
-      for await (let r of sub) {
-        if (r.data) {
-          this.onDataReceived(r.data);
-        }
-      }
-    } else {
-      let sub = await this.handler.subscribe(
-        StateSubscriptions.transmitterLinks(
-          includeLinks,
-          includeNewest,
-          includeNearest
-        ),
-        {
-          subscribe: true,
-          receiverTypes: this.receiverTypes,
-          onlyWhenNearestChange: this.onlyWhenNearestChange,
-        }
-      );
-      for await (let r of sub) {
-        if (r.otrackers_transmitterlinksbulk.data) {
-          this.onDataReceived(r.otrackers_transmitterlinksbulk.data);
-        }
+    let iter = await this.connection.subscribe(
+      StateSubscriptions.transmitterLinks(
+        includeLinks,
+        includeNewest,
+        includeNearest
+      ),
+      {
+        subscribe: true,
+        receiverTypes: this.receiverTypes,
+        onlyWhenNearestChange: this.onlyWhenNearestChange,
+      },
+      unwind
+    );
+    for await (let r of iter) {
+      if (r.data) {
+        this.onDataReceived(r.data);
       }
     }
   }
