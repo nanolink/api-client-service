@@ -10,6 +10,22 @@ const {
   DoubleFields,
 } = require("./receivers/statesReceiver");
 
+const VolageRanges = [
+  { Low: 0.0, High: 13.0 },
+  { Low: 16.0, High: 25.0 },
+];
+
+function Ignition(voltage) {
+  let retVal = true;
+  for (let n of VolageRanges) {
+    if (voltage >= n.Low && voltage < n.High) {
+      retVal = false;
+      break;
+    }
+  }
+  return retVal;
+}
+
 /**
  *  The main application class.
  */
@@ -22,6 +38,7 @@ class App {
   trackers;
 
   constructor(url, apitoken) {
+    console.log(url);
     this.url = url;
     this.apitoken = apitoken;
     this.db = level("./data");
@@ -241,11 +258,30 @@ class App {
   onTransmitterLinkUpdate(tlink) {
     console.log(tlink);
   }
+
+  trackerIgnitionState = new Map();
   onVoltageChanged(data) {
     /**
      * This callback receives external voltage changes
      */
-    console.log(data);
+    let pState = this.trackerIgnitionState.get(data.vID);
+    let nState = Ignition(data.value);
+    if (pState != undefined) {
+      if (pState != nState) {
+        this.trackerIgnitionState.set(data.vID, nState);
+        this.onIgnitionChanged(data, nState);
+      }
+    } else {
+      this.trackerIgnitionState.set(data.vID, nState);
+      this.onIgnitionChanged(data, nState);
+    }
+  }
+
+  onIgnitionChanged(data, ignition) {
+    /**
+     *  This callback tells if the cars engine has ignition
+     */
+    console.log(`${data.vID} ignition is ${ignition ? "on" : "off"}`);
   }
 }
 module.exports = { App };
