@@ -1,6 +1,5 @@
 const level = require("level");
-const { Connect } = require("./framework/connect");
-const { Mirror } = require("./framework/mirror");
+const { Connection } = require("@nanolink/nanolink-tools/lib");
 const { Subscriptions } = require("./definitions/mirrors");
 const { GPSReceiver } = require("./receivers/gpsReceivers");
 const {
@@ -27,8 +26,9 @@ class App {
    * Starts the application
    */
   async run() {
-    this.connect = new Connect(`${this.url}/api/public`, this.apitoken);
+    this.connect = new Connection(this.url, this.apitoken);
     this.connect.onReady = this.callbackTo(this.onReady);
+    this.connect.onMirrorCreated = this.callbackTo(this.onMirrorCreated);
     await this.connect.connect();
   }
 
@@ -41,27 +41,30 @@ class App {
     return (...p) => f.apply(this, p);
   }
 
+  async onMirrorCreated(mirror) {
+    /**
+     *  Setup callbacks to keep track of changes. Version is persisted to allow for restarts
+     */
+    if (mirror.name == "references") {
+      this.referenceVersion = await this.getCommittedVersion("references");
+      mirror.onInserted = this.callbackTo(this.onReferenceAdded);
+      mirror.onUpdated = this.callbackTo(this.onReferenceUpdated);
+      mirror.onDeleted = this.callbackTo(this.onReferenceDeleted);
+    } else if (mirror.name == "trackers") {
+      this.trackerVersion = await this.getCommittedVersion("trackers");
+      mirror.onInserted = this.callbackTo(this.onTrackerAdded);
+      mirror.onUpdated = this.callbackTo(this.onTrackerUpdated);
+      mirror.onDeleted = this.callbackTo(this.onTrackerDeleted);
+    }
+  }
+
   /**
    * Main application code. Change this function to your needs
    */
   async onReady() {
     console.log("Ready");
     /**
-     * This how you keep track of reference changes (assets, sites and users)
-     * Change will occur in the callback functions
-     */
-    this.referenceVersion = await this.getCommittedVersion("references");
-    let referenceMirror = new Mirror(
-      "references",
-      Subscriptions.references,
-      this.connect.subscriptionHandler
-    );
-    referenceMirror.onInserted = this.callbackTo(this.onReferenceAdded);
-    referenceMirror.onUpdated = this.callbackTo(this.onReferenceUpdated);
-    referenceMirror.onDeleted = this.callbackTo(this.onReferenceDeleted);
-
-    /**
-     * load returns a Map with id as key and reference as value
+     * getMirror returns a Map with id as key and the document as value
      *
      * Note: the map is keep up-to date with changes from the server
      *
@@ -78,30 +81,12 @@ class App {
      *  }
      * \endcode
      */
-    this.references = await referenceMirror.load();
-
-    /**
-     * This how you keep track of tracker changes
-     */
-    this.trackerVersion = await this.getCommittedVersion("trackers");
-    let trackerMirror = new Mirror(
-      "trackers",
-      Subscriptions.trackers,
-      this.connect.subscriptionHandler
-    );
-    trackerMirror.onInserted = this.callbackTo(this.onTrackerAdded);
-    trackerMirror.onUpdated = this.callbackTo(this.onTrackerUpdated);
-    trackerMirror.onDeleted = this.callbackTo(this.onTrackerDeleted);
-
-    /**
-     * Work as the reference mirror, except that the key is vID
-     */
-    this.trackers = await trackerMirror.load();
-
+    this.references = await this.connect.getMirror("references");
+    this.trackers = await this.connect.getMirror("trackers");
     /**
      * This piece of code listens for GPS changes on trackers
      */
-    let gpsReceivers = new GPSReceiver(this.connect.subscriptionHandler);
+    let gpsReceivers = new GPSReceiver(this.connect);
     gpsReceivers.onDataReceived = this.callbackTo(this.onGPSDataUpdate);
     gpsReceivers.run();
 
@@ -110,7 +95,7 @@ class App {
      */
 
     let tlinkReceivers = new TransmitterLinksReceiver(
-      this.connect.subscriptionHandler,
+      this.connect,
       ["LAN_GATE_TRACKER"],
       true
     );
@@ -121,7 +106,7 @@ class App {
      * The are a couple of arguments to the run function
      * @see {TransmitterLinksReceiver.run}
      */
-    tlinkReceivers.run(false, false, false, true);
+    tlinkReceivers.run(true, false, false, true);
   }
 
   async getCommittedVersion(mirror) {
