@@ -5,8 +5,9 @@ const { App } = require("./app");
 /* 
    This code initializes the framework, so that it is compatible with node.
 */
-const coreserver =
-  process.env.CORESERVER ?? "https://www.nanolink.com/corelocal";
+const coreserver = `${
+  process.env.CORESERVER ?? "https://www.nanolink.com/corelocal"
+}/api/public`;
 const apiToken = process.env.APITOKEN;
 
 if (process.env.GLOBAL_AGENT_HTTP_PROXY) {
