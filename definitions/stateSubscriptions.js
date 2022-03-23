@@ -66,6 +66,110 @@ const StateSubscriptions = {
             }
         }
     }`,
+  statesDouble: ` 
+    subscription states($field: TrackerPropertyDoubleField!, $trackerVIDs: [String]) {
+      otrackers_infodouble(
+        field: $field
+        trackerVIDs: $trackerVIDs
+        includeInitial: true
+        subscribe: true
+      ) {
+        type
+        total
+        deleteId
+        data {
+          field
+          vID
+          value
+          stamp
+        }
+        deleteVersion
+      }
+    }
+  `,
+  statesInt: ` 
+    subscription states($field: TrackerPropertyIntField!, $trackerVIDs: [String]) {
+      otrackers_infoint(
+        field: $field
+        trackerVIDs: $trackerVIDs
+        includeInitial: true
+        subscribe: true
+      ) {
+        type
+        total
+        deleteId
+        data {
+          field
+          vID
+          value
+          stamp
+        }
+        deleteVersion
+      }
+    }
+  `,
+  statesBool: ` 
+    subscription states($field: TrackerPropertyBoolField!, $trackerVIDs: [String]) {
+      otrackers_infobool(
+        field: $field
+        trackerVIDs: $trackerVIDs
+        includeInitial: true
+        subscribe: true
+      ) {
+        type
+        total
+        deleteId
+        data {
+          field
+          vID
+          value
+          stamp
+        }
+        deleteVersion
+      }
+    }
+  `,
+  statesLong: ` 
+    subscription states($field: TrackerPropertyLongField!, $trackerVIDs: [String]) {
+      otrackers_infolong(
+        field: $field
+        trackerVIDs: $trackerVIDs
+        includeInitial: true
+        subscribe: true
+      ) {
+        type
+        total
+        deleteId
+        data {
+          field
+          vID
+          value
+          stamp
+        }
+        deleteVersion
+      }
+    }
+  `,
+  statesAny: ` 
+    subscription states($field: TrackerPropertyField!, $trackerVIDs: [String]) {
+      otrackers_infoanybulk(
+        field: $field
+        trackerVIDs: $trackerVIDs
+        includeInitial: true
+        subscribe: true
+      ) {
+        type
+        total
+        deleteId
+        data {
+          field
+          vID
+          value
+          stamp
+        }
+        deleteVersion
+      }
+    }
+  `,
 };
-
 module.exports = { StateSubscriptions };
