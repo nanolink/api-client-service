@@ -5,6 +5,10 @@ const { GPSReceiver } = require("./receivers/gpsReceivers");
 const {
   TransmitterLinksReceiver,
 } = require("./receivers/transmitterLinksReceiver");
+const {
+  StatesReceiverDouble,
+  DoubleFields,
+} = require("./receivers/statesReceiver");
 
 /**
  *  The main application class.
@@ -68,7 +72,7 @@ class App {
      *
      * Note: the map is keep up-to date with changes from the server
      *
-     * So if you i.e the information for an asset just use:
+     * So if you i.e want the information for an asset just use:
      * \code
      *  let theReference = reference.get(referenceId)
      *  let name
@@ -107,6 +111,15 @@ class App {
      * @see {TransmitterLinksReceiver.run}
      */
     tlinkReceivers.run(true, false, false, true);
+    /**
+     *  This piece of code listens for external voltage changes
+     */
+    let voltReceiver = new StatesReceiverDouble(
+      this.connect,
+      DoubleFields.EXTERNAL_VOLTAGE
+    );
+    voltReceiver.onDataReceived = this.callbackTo(this.onVoltageChanged);
+    voltReceiver.run();
   }
 
   async getCommittedVersion(mirror) {
@@ -228,6 +241,11 @@ class App {
   onTransmitterLinkUpdate(tlink) {
     console.log(tlink);
   }
+  onVoltageChanged(data) {
+    /**
+     * This callback receives external voltage changes
+     */
+    console.log(data);
+  }
 }
-
 module.exports = { App };
