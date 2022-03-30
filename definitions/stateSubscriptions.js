@@ -1,5 +1,11 @@
 const StateSubscriptions = {
-  transmitterLinks(includeLinks, includeNewest, includeNearest) {
+  transmitterLinks(
+    includeLinks,
+    includeNewest,
+    includeNearest,
+    includeNewestByTrackerType,
+    includeNewestByReferenceType
+  ) {
     return `
     subscription links($trackerVIDs: [String], $subscribe: Boolean!, $onlyWhenNearestChange: Boolean, $receiverTypes: [TrackerType!]) {
         otrackers_transmitterlinksbulk(
@@ -18,6 +24,26 @@ const StateSubscriptions = {
             ${includeLinks ? `links { ... linkFields }` : ""}
             ${includeNewest ? ` newest { ... linkFields }` : ""}
             ${includeNearest ? `nearest { ... linkFields }` : ""}
+            ${
+              includeNewestByTrackerType
+                ? `newestByTrackerType { 
+              gpsGate { ... linkFields }
+              lanGate { ... linkFields } 
+              mobile { ... linkFields }
+              meshGate { ... linkFields }
+              crowd { ... linkFields }
+            }`
+                : ""
+            }
+            ${
+              includeNewestByReferenceType
+                ? `newestByReferenceType {
+              asset { ... linkFields }
+              site { ... linkFields } 
+              user { ... linkFields }
+            }`
+                : ""
+            }
           }
           deleteVersion
         }

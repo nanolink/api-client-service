@@ -26,12 +26,21 @@ class TransmitterLinksReceiver {
    * @param {boolean} includeNewest - If true the newest link is resolved
    * @param {boolean} includeNearest - if true the nearest link is resolved according to RSSI
    */
-  async run(unwind, includeLinks, includeNewest, includeNearest) {
+  async run(
+    unwind,
+    includeLinks,
+    includeNewest,
+    includeNearest,
+    includeNewestByTrackerType,
+    includeNewestByReferenceType
+  ) {
     let iter = await this.connection.subscribe(
       StateSubscriptions.transmitterLinks(
         includeLinks,
         includeNewest,
-        includeNearest
+        includeNearest,
+        includeNewestByTrackerType,
+        includeNewestByReferenceType
       ),
       {
         subscribe: true,

@@ -5,10 +5,16 @@ const { GPSReceiver } = require("./receivers/gpsReceivers");
 const {
   TransmitterLinksReceiver,
 } = require("./receivers/transmitterLinksReceiver");
+const { LogLinksReceiver } = require("./logreceivers/linksCompoundReceiver");
 const {
-  StatesReceiverDouble,
-  DoubleFields,
-} = require("./receivers/statesReceiver");
+  LogStateReceiverDouble,
+  DoubleFieldsLog,
+} = require("./logreceivers/statesReceiver");
+const {
+  TripsReceiver,
+  GPSOption,
+  OdometerOption,
+} = require("./logreceivers/tripReceiver");
 
 const VolageRanges = [
   { Low: 0.0, High: 13.0 },
@@ -36,6 +42,9 @@ class App {
   db;
   references;
   trackers;
+  trackerIgnitionState = new Map();
+  voltageLastId;
+  linksLastId;
 
   constructor(url, apitoken) {
     console.log(url);
@@ -51,6 +60,7 @@ class App {
     this.connect.onReady = this.callbackTo(this.onReady);
     this.connect.onMirrorCreated = this.callbackTo(this.onMirrorCreated);
     await this.connect.connect();
+    await this.connect.connectLog();
   }
 
   /**
@@ -84,6 +94,8 @@ class App {
    */
   async onReady() {
     console.log("Ready");
+    this.voltageLastId = await this.getCommittedId("voltage");
+    this.linksLastId = await this.getCommittedId("links");
     /**
      * getMirror returns a Map with id as key and the document as value
      *
@@ -115,11 +127,7 @@ class App {
      *  This piece of code listens for tracker link changes
      */
 
-    let tlinkReceivers = new TransmitterLinksReceiver(
-      this.connect,
-      ["LAN_GATE_TRACKER"],
-      true
-    );
+    let tlinkReceivers = new TransmitterLinksReceiver(this.connect, null, true);
     tlinkReceivers.onDataReceived = this.callbackTo(
       this.onTransmitterLinkUpdate
     );
@@ -127,16 +135,44 @@ class App {
      * The are a couple of arguments to the run function
      * @see {TransmitterLinksReceiver.run}
      */
-    tlinkReceivers.run(true, false, false, true);
+    tlinkReceivers.run(true, false, true, true, true, true);
     /**
-     *  This piece of code listens for external voltage changes
+     *  This piece of code listens for external voltage changes (only current state.)
      */
-    let voltReceiver = new StatesReceiverDouble(
+    // let voltReceiver = new StatesReceiverDouble(
+    //   this.connect,
+    //   DoubleFields.EXTERNAL_VOLTAGE
+    // );
+    // voltReceiver.onDataReceived = this.callbackTo(this.onVoltageChanged);
+    // this.trackerIgnitionState = new Map();
+    // voltReceiver.run();
+    let voltage = new LogStateReceiverDouble(
       this.connect,
-      DoubleFields.EXTERNAL_VOLTAGE
+      false,
+      true,
+      null,
+      DoubleFieldsLog.EXTERNAL_VOLTAGE,
+      "2022-01-01",
+      null,
+      this.voltageLastId,
+      100
     );
-    voltReceiver.onDataReceived = this.callbackTo(this.onVoltageChanged);
-    voltReceiver.run();
+    voltage.onDataReceived = this.callbackTo(this.onVoltageChanged);
+    this.trackerIgnitionState = new Map();
+    voltage.run(true).then(() => {
+      console.log("Voltage done receiving data");
+    });
+    /**
+     * Even better use the trips subscriptions from the logserver (Uses voltage to determine ignition)
+     */
+    let trips = new TripsReceiver(this.connect);
+    trips.onDataReceived = this.callbackTo(this.onTripReceived);
+    trips.run(GPSOption.START_AND_END, OdometerOption.START_AND_END);
+  }
+
+  onLinkReceived(data) {
+    this.commitId("links", data.id);
+    console.log(data);
   }
 
   async getCommittedVersion(mirror) {
@@ -146,8 +182,18 @@ class App {
     } catch {}
     return retVal ? parseInt(retVal) : -1;
   }
+  async getCommittedId(mirror) {
+    let retVal;
+    try {
+      retVal = await this.db.get(mirror);
+    } catch {}
+    return retVal;
+  }
   async commitVersion(mirror, version) {
     this.db.put(mirror, version);
+  }
+  async commitId(subs, id) {
+    this.db.put(subs, id);
   }
   onReferenceAdded(mirror, reference) {
     // Make sure a change is only processed once
@@ -261,6 +307,7 @@ class App {
 
   trackerIgnitionState = new Map();
   onVoltageChanged(data) {
+    this.commitId("voltage", data.id);
     /**
      * This callback receives external voltage changes
      */
@@ -282,6 +329,10 @@ class App {
      *  This callback tells if the cars engine has ignition
      */
     console.log(`${data.vID} ignition is ${ignition ? "on" : "off"}`);
+  }
+
+  onTripReceived(trip) {
+    console.log(trip);
   }
 }
 module.exports = { App };

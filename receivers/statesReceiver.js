@@ -28,7 +28,7 @@ class StatesReceiverDouble {
    */
   constructor(connection, field, trackers) {
     if (DoubleFields[field] == undefined) {
-      throw `field: {field} is not a double field`;
+      throw `field: ${field} is not a double field`;
     }
     this.connection = connection;
     this.field = field;
@@ -75,7 +75,7 @@ class StatesReceiverInt {
    */
   constructor(connection, field, trackers) {
     if (IntFields[field] == undefined) {
-      throw `field: {field} is not a int field`;
+      throw `field: ${field} is not a int field`;
     }
     this.connection = connection;
     this.field = field;
@@ -123,7 +123,7 @@ class StatesReceiverBool {
    */
   constructor(connection, field, trackers) {
     if (BoolFields[field] == undefined) {
-      throw `field: {field} is not a bool field`;
+      throw `field: ${field} is not a bool field`;
     }
     this.connection = connection;
     this.field = field;
@@ -167,7 +167,7 @@ class StatesReceiverLong {
    */
   constructor(connection, field, trackers) {
     if (LongFields[field] == undefined) {
-      throw `field: {field} is not a long field`;
+      throw `field: ${field} is not a long field`;
     }
     this.connection = connection;
     this.field = field;
@@ -214,7 +214,7 @@ class StatesReceiverAny {
    */
   constructor(connection, field, trackers) {
     if (AnyFields[field] == undefined) {
-      throw `field: {field} is not a field`;
+      throw `field: ${field} is not a field`;
     }
     this.connection = connection;
     this.field = field;
