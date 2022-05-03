@@ -152,8 +152,8 @@ const LogSubscriptions = {
       `,
   trips(includeLinks, includeGPS, includeOdometer) {
     return `
-      subscription trackerinfo($trackerVIDs:[String], $start:DateTime, $end: DateTime, $minStopTime: Int, $gpsOption: GPSOption, $odometerOption: OdometerOption, $linkOption: LinkOption) {
-          trip_info(filter: { trackerVIDs: $trackerVIDs, start: $start, end: $end, gPSOption: $gpsOption, odometerOption: $odometerOption, linkOption: $linkOption, minStopTimeInSeconds:$minStopTime }) {
+      subscription trackerinfo($trackerVIDs:[String], $start:DateTime, $end: DateTime, $minStopTime: Int, $gpsOption: GPSOption, $odometerOption: OdometerOption, $linkOption: LinkOption, $includeInitial:Boolean, $subscribe: Boolean) {
+          trip_info(filter: { trackerVIDs: $trackerVIDs, start: $start, end: $end, gPSOption: $gpsOption, odometerOption: $odometerOption, linkOption: $linkOption, minStopTimeInSeconds:$minStopTime }, includeInitial:$includeInitial, subscribe:$subscribe) {
               type 
               data {
                 __typename
@@ -162,6 +162,41 @@ const LogSubscriptions = {
                   trackerVID
                   start
                   end: stop
+                }
+                ${
+                  includeOdometer
+                    ? "... on QOdometerTripInfo { createdTime value }"
+                    : ""
+                }
+                ${
+                  includeGPS
+                    ? `... on QGPSTripInfo { createdTime longitude latitude speed }`
+                    : ""
+                }
+                ${
+                  includeLinks
+                    ? `... on QLinkTripInfo { transmitterVID start end }`
+                    : ""
+                }
+              }
+          }
+      }
+    `;
+  },
+  workhours(includeLinks, includeGPS, includeOdometer) {
+    return `
+      subscription trackerinfo($trackerVIDs:[String], $start:DateTime, $end: DateTime, $minStopTime: Int, $gpsOption: GPSOption, $odometerOption: OdometerOption, $linkOption: LinkOption, $includeInitial:Boolean, $subscribe: Boolean) {
+          workhour_info(filter: { trackerVIDs: $trackerVIDs, start: $start, end: $end, gPSOption: $gpsOption, odometerOption: $odometerOption, linkOption: $linkOption, minStopTimeInSeconds:$minStopTime }, includeInitial:$includeInitial, subscribe:$subscribe) {
+              type 
+              data {
+                __typename
+                ... on QTrip 
+                {
+                  trackerVID
+                  start
+                  end: stop
+                  startStamp
+                  stopStamp
                 }
                 ${
                   includeOdometer
