@@ -15,8 +15,8 @@ if (process.env.GLOBAL_AGENT_HTTP_PROXY) {
   console.log("Using proxy to:", process.env.GLOBAL_AGENT_HTTP_PROXY);
   bootstrap();
 }
-//let app = new ExampleApp(coreserver, apiToken);
-let app = new App(coreserver, apiToken);
+let app = new ExampleApp(coreserver, apiToken);
+//let app = new App(coreserver, apiToken);
 
 app.run().catch((e) => {
   console.log(e);
