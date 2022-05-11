@@ -36,6 +36,7 @@ class ExampleApp extends AppBase {
   db;
   references;
   trackers;
+  vid2objectid;
 
   constructor(url, apitoken) {
     super(url, apitoken);
@@ -92,6 +93,14 @@ class ExampleApp extends AppBase {
      */
     this.references = await this.connection.getMirror("references");
     this.trackers = await this.connection.getMirror("trackers");
+    /**
+     * This code creates a Map between vID and ObjectId
+     */
+    this.vid2objectid = new Map();
+    for (let tr of this.trackers.values()) {
+      this.vid2objectid.set(tr.vID, tr.objId);
+    }
+
     /**
      * This piece of code listens for GPS changes on trackers (receivers only)
      */
@@ -290,6 +299,7 @@ class ExampleApp extends AppBase {
     if (link) {
       antenna = {
         vID: link.vID,
+        objId: this.vid2objectid.get(link.vID),
         rSSI: link.rSSI,
         linkActive: tlink.nearest != null,
         lastUpdated: link?.lastUpdated,
@@ -299,6 +309,7 @@ class ExampleApp extends AppBase {
     }
     let beaconPosition = {
       vID: tlink.vID,
+      objId: this.vid2objectid.get(link.vID),
       antenna: antenna,
     };
     console.log(beaconPosition);
@@ -334,6 +345,18 @@ class ExampleApp extends AppBase {
   }
   onWorkHoursReceived(data) {
     console.log("WORKHOURS (in s)", data);
+  }
+
+  /**
+   * Example on how to map ObjectId to vID and vice versa.
+   */
+
+  MigrateObjectId2VID() {
+    for (let tracker of this.trackers.values()) {
+      let vid = tracker.vID;
+      let objId = traacker.objId;
+      // Do migration code here
+    }
   }
 }
 module.exports = { ExampleApp };
