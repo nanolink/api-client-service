@@ -1,17 +1,25 @@
 const level = require("level");
 const { Connection } = require("@nanolink/nanolink-tools/lib");
-const { Subscriptions } = require("./definitions/mirrors");
-const { GPSReceiver } = require("./receivers/gpsReceivers");
+const {
+  GPSReceiver,
+} = require("@nanolink/nanolink-tools/lib/receivers/gpsReceivers");
 const {
   TransmitterLinksReceiver,
-} = require("./receivers/transmitterLinksReceiver");
+} = require("@nanolink/nanolink-tools/lib/receivers/transmitterLinksReceiver");
 const {
   StatesReceiverDouble,
   DoubleFields,
-} = require("./receivers/statesReceiver");
+} = require("@nanolink/nanolink-tools/lib/receivers/statesReceiver");
 const { AppBase } = require("./appbase");
-const { TripReceiver } = require("./receivers/tripReceiver");
-const { WorkHoursReceiver } = require("./receivers/workHoursReceiver");
+const {
+  TripReceiver,
+} = require("@nanolink/nanolink-tools/lib/receivers/tripReceiver");
+const {
+  WorkHoursReceiver,
+} = require("@nanolink/nanolink-tools/lib/receivers/workHoursReceiver");
+const {
+  TagPositionReceiver,
+} = require("@nanolink/nanolink-tools/lib/receivers/tagPositionReceiver");
 
 const VolageRanges = [
   { Low: 0.0, High: 13.0 },
@@ -112,49 +120,50 @@ class ExampleApp extends AppBase {
      *  This piece of code listens for tracker link changes
      */
 
-    let tlinkReceivers = new TransmitterLinksReceiver(
-      this.connection,
-      ["LAN_GATE_TRACKER"], // Only for Lan gates (set to null for all)
-      true
-    );
-    tlinkReceivers.onDataReceived = this.callbackTo(
-      this.onTransmitterLinkUpdate
-    );
+    // let tlinkReceivers = new TransmitterLinksReceiver(
+    //   this.connection,
+    //   ["LAN_GATE_TRACKER"], // Only for Lan gates (set to null for all)
+    //   true
+    // );
+    // tlinkReceivers.onDataReceived = this.callbackTo(
+    //   this.onTransmitterLinkUpdate
+    // );
     /**
      * The are a couple of arguments to the run function
      * @see {TransmitterLinksReceiver.run}
      */
-    tlinkReceivers.run(true, false, true, true);
+    // tlinkReceivers.run(true, false, true, true);
     /**
      *  This piece of code listens for external voltage changes
      */
-    let voltReceiver = new StatesReceiverDouble(
-      this.connection,
-      DoubleFields.EXTERNAL_VOLTAGE
-    );
-    voltReceiver.onDataReceived = this.callbackTo(this.onVoltageChanged);
-    voltReceiver.run();
+    // let voltReceiver = new StatesReceiverDouble(
+    //   this.connection,
+    //   DoubleFields.EXTERNAL_VOLTAGE
+    // );
+    // voltReceiver.onDataReceived = this.callbackTo(this.onVoltageChanged);
+    // voltReceiver.run();
 
     /**
      * This receiver returns completed trips with GPS and Distance travelled (odoEnd - OdoStart)
      */
-    let tripReceiver = new TripReceiver(this.connection);
-    tripReceiver.onDataReceived = this.callbackTo(this.onTripReceived);
-    tripReceiver.run(
-      false, // Set to true if active links are need (i.e what tools are in the van during the trip)
-      true, // Include GPS coordinates
-      true, // Include odometer start/end
-      ["180000C375FA"], // List of trackers, if null then all
-      null, // start date/time
-      null, // end date/time
-      120, // Ignore stops shorter than this period
-      false, // Set to true to get initial data from the server
-      true // If true then events for new completed trips are sent
-    );
+    // let tripReceiver = new TripReceiver(this.connection);
+    // tripReceiver.onDataReceived = this.callbackTo(this.onTripReceived);
+    // tripReceiver.run(
+    //   false, // Set to true if active links are need (i.e what tools are in the van during the trip)
+    //   true, // Include GPS coordinates
+    //   true, // Include odometer start/end
+    //   ["180000C375FA"], // List of trackers, if null then all
+    //   null, // start date/time
+    //   null, // end date/time
+    //   120, // Ignore stops shorter than this period
+    //   false, // Set to true to get initial data from the server
+    //   true // If true then events for new completed trips are sent
+    // );
     /**
      * This subscription returns periods where trackers has been running. (Ignition true)
      * Has the same arguments as the above subscription (tripReceiver)
      */
+    /*
     let workHoursReceiver = new WorkHoursReceiver(this.connection);
     workHoursReceiver.onDataReceived = this.callbackTo(
       this.onWorkHoursReceived
@@ -170,6 +179,10 @@ class ExampleApp extends AppBase {
       true,
       true
     );
+    */
+    let tagPosReceiver = new TagPositionReceiver(this.connection);
+    tagPosReceiver.onDataReceived = this.callbackTo(this.onTagPositionReceived);
+    tagPosReceiver.run(true);
   }
 
   async getCommittedVersion(mirror) {
@@ -345,6 +358,29 @@ class ExampleApp extends AppBase {
   }
   onWorkHoursReceived(data) {
     console.log("WORKHOURS (in s)", data);
+  }
+
+  onTagPositionReceived(data) {
+    let antenna;
+    if (data.link) {
+      antenna = {
+        vID: data.link.vID,
+        objId: this.vid2objectid.get(data.link.vID),
+        rSSI: data.link.rSSI,
+        endTime: data.link.endTime,
+        linkActive: !data.link.endTime,
+        lastUpdated: data.link.lastUpdated,
+        latitude: data.link.position?.locationInfo?.latitude,
+        longitude: data.link.position?.locationInfo?.longitude,
+        trackerType: data.link.trackerType,
+      };
+    }
+    let beaconPosition = {
+      vID: data.vID,
+      objId: this.vid2objectid.get(data.vID),
+      antenna: antenna,
+    };
+    console.log("POS", beaconPosition);
   }
 
   /**
