@@ -63,17 +63,17 @@ class ExampleApp extends AppBase {
     /**
      *  Setup callbacks to keep track of changes. Version is persisted to allow for restarts
      */
-    if (mirror.name == "references") {
-      this.referenceVersion = await this.getCommittedVersion("references");
-      mirror.onInserted = this.callbackTo(this.onReferenceAdded);
-      mirror.onUpdated = this.callbackTo(this.onReferenceUpdated);
-      mirror.onDeleted = this.callbackTo(this.onReferenceDeleted);
-    } else if (mirror.name == "trackers") {
-      this.trackerVersion = await this.getCommittedVersion("trackers");
-      mirror.onInserted = this.callbackTo(this.onTrackerAdded);
-      mirror.onUpdated = this.callbackTo(this.onTrackerUpdated);
-      mirror.onDeleted = this.callbackTo(this.onTrackerDeleted);
-    }
+    // if (mirror.name == "references") {
+    //   this.referenceVersion = await this.getCommittedVersion("references");
+    //   mirror.onInserted = this.callbackTo(this.onReferenceAdded);
+    //   mirror.onUpdated = this.callbackTo(this.onReferenceUpdated);
+    //   mirror.onDeleted = this.callbackTo(this.onReferenceDeleted);
+    // } else if (mirror.name == "trackers") {
+    //   this.trackerVersion = await this.getCommittedVersion("trackers");
+    //   mirror.onInserted = this.callbackTo(this.onTrackerAdded);
+    //   mirror.onUpdated = this.callbackTo(this.onTrackerUpdated);
+    //   mirror.onDeleted = this.callbackTo(this.onTrackerDeleted);
+    // }
   }
 
   /**
@@ -112,9 +112,9 @@ class ExampleApp extends AppBase {
     /**
      * This piece of code listens for GPS changes on trackers (receivers only)
      */
-    let gpsReceivers = new GPSReceiver(this.connection);
-    gpsReceivers.onDataReceived = this.callbackTo(this.onGPSDataUpdate);
-    gpsReceivers.run();
+    // let gpsReceivers = new GPSReceiver(this.connection);
+    // gpsReceivers.onDataReceived = this.callbackTo(this.onGPSDataUpdate);
+    // gpsReceivers.run();
 
     /**
      *  This piece of code listens for tracker link changes
@@ -142,6 +142,14 @@ class ExampleApp extends AppBase {
     // );
     // voltReceiver.onDataReceived = this.callbackTo(this.onVoltageChanged);
     // voltReceiver.run();
+    let batteryPercentReceiver = new StatesReceiverDouble(
+      this.connection,
+      DoubleFields.BATTERY_PERCENT
+    );
+    batteryPercentReceiver.onDataReceived = this.callbackTo(
+      this.onBatteryPercentChanged
+    );
+    batteryPercentReceiver.run();
 
     /**
      * This receiver returns completed trips with GPS and Distance travelled (odoEnd - OdoStart)
@@ -351,6 +359,10 @@ class ExampleApp extends AppBase {
      *  This callback tells if the cars engine has ignition
      */
     console.log(`${data.vID} ignition is ${ignition ? "on" : "off"}`);
+  }
+
+  onBatteryPercentChanged(data) {
+    console.log(`${data.vID} battery percent ${data.value}`);
   }
 
   onTripReceived(data) {
