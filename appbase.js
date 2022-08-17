@@ -17,12 +17,14 @@ class AppBase {
     this.connection = new Connection(this.url, this.apitoken);
     this.connection.onReady = this.callbackTo(this.onReady);
     this.connection.onMirrorCreated = this.callbackTo(this.onMirrorCreated);
+    this.connection.onLogReady = this.callbackTo(this.onLogReady);
     await this.connection.connect(true);
   }
   callbackTo(f) {
     return (...p) => f.apply(this, p);
   }
   async onReady() {}
+  async onLogReady() {}
   async onMirrorCreated(mirror) {}
 }
 

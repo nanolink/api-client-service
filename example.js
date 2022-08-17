@@ -20,6 +20,9 @@ const {
 const {
   TagPositionReceiver,
 } = require("@nanolink/nanolink-tools/lib/receivers/tagPositionReceiver");
+const {
+  GPSLogReceiver,
+} = require("@nanolink/nanolink-tools/lib/receivers/gpsLogReceiver");
 
 const VolageRanges = [
   { Low: 0.0, High: 13.0 },
@@ -59,6 +62,11 @@ class ExampleApp extends AppBase {
     return (...p) => f.apply(this, p);
   }
 
+  async run() {
+    await super.run();
+    await this.connection.connectLog(true);
+  }
+
   async onMirrorCreated(mirror) {
     /**
      *  Setup callbacks to keep track of changes. Version is persisted to allow for restarts
@@ -77,10 +85,29 @@ class ExampleApp extends AppBase {
   }
 
   /**
+   * Call when the log is ready
+   */
+  async onLogReady() {
+    console.log("LogReady");
+    this.gpsStart = await this.getCommittedObjectId("gpslog");
+    let gpsLog = new GPSLogReceiver(
+      this.connection,
+      this.gpsStart,
+      "2022-08-17T13:00"
+    );
+    gpsLog.onDataReceived = this.callbackTo(this.onGPSLogReceived);
+    gpsLog.onInitialReceived = () => {
+      console.log("Initial received");
+    };
+    gpsLog.run(true);
+  }
+
+  /**
    * Main application code. Change this function to your needs
    */
   async onReady() {
     console.log("Ready");
+    return;
     /**
      * getMirror returns a Map with id as key and the document as value
      *
@@ -107,6 +134,7 @@ class ExampleApp extends AppBase {
     this.vid2objectid = new Map();
     for (let tr of this.trackers.values()) {
       this.vid2objectid.set(tr.vID, tr.objId);
+      1;
     }
 
     /**
@@ -199,6 +227,13 @@ class ExampleApp extends AppBase {
       retVal = await this.db.get(mirror);
     } catch {}
     return retVal ? parseInt(retVal) : -1;
+  }
+  async getCommittedObjectId(mirror) {
+    let retVal;
+    try {
+      retVal = await this.db.get(mirror);
+    } catch {}
+    return retVal;
   }
   async commitVersion(mirror, version) {
     this.db.put(mirror, version);
@@ -308,6 +343,12 @@ class ExampleApp extends AppBase {
       gps.reference = this.references.get(gps.tracker.referenceId);
     }
     console.log(gps);
+  }
+  onGPSLogReceived(gps) {
+    if (gps.longitude) {
+      console.log(gps);
+      this.commitVersion("gpslog", gps.id);
+    }
   }
 
   /**
