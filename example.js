@@ -26,7 +26,7 @@ const {
 
 const VolageRanges = [
   { Low: 0.0, High: 13.0 },
-  { Low: 16.0, High: 25.0 },
+  { Low: 16.0, High: 26.0 },
 ];
 
 function Ignition(voltage) {
