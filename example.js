@@ -89,17 +89,32 @@ class ExampleApp extends AppBase {
    */
   async onLogReady() {
     console.log("LogReady");
-    this.gpsStart = await this.getCommittedObjectId("gpslog");
-    let gpsLog = new GPSLogReceiver(
-      this.connection,
-      this.gpsStart,
-      "2022-08-17T13:00"
+    let workHoursReceiver = new WorkHoursReceiver(this.connection);
+    workHoursReceiver.onDataReceived = this.callbackTo(
+      this.onWorkHoursReceived
     );
-    gpsLog.onDataReceived = this.callbackTo(this.onGPSLogReceived);
-    gpsLog.onInitialReceived = () => {
-      console.log("Initial received");
-    };
-    gpsLog.run(true);
+    workHoursReceiver.run(
+      false,
+      false,
+      false,
+      [],
+      "2023-05-20",
+      null,
+      null,
+      true,
+      true
+    );
+    // this.gpsStart = await this.getCommittedObjectId("gpslog");
+    // let gpsLog = new GPSLogReceiver(
+    //   this.connection,
+    //   this.gpsStart,
+    //   "2022-08-17T13:00"
+    // );
+    // gpsLog.onDataReceived = this.callbackTo(this.onGPSLogReceived);
+    // gpsLog.onInitialReceived = () => {
+    //   console.log("Initial received");
+    // };
+    // gpsLog.run(true);
   }
 
   /**
@@ -107,7 +122,6 @@ class ExampleApp extends AppBase {
    */
   async onReady() {
     console.log("Ready");
-    return;
     /**
      * getMirror returns a Map with id as key and the document as value
      *
@@ -142,7 +156,7 @@ class ExampleApp extends AppBase {
      */
     // let gpsReceivers = new GPSReceiver(this.connection);
     // gpsReceivers.onDataReceived = this.callbackTo(this.onGPSDataUpdate);
-    // gpsReceivers.run();
+    // gpsReceivers.run(true);
 
     /**
      *  This piece of code listens for tracker link changes
@@ -170,14 +184,14 @@ class ExampleApp extends AppBase {
     // );
     // voltReceiver.onDataReceived = this.callbackTo(this.onVoltageChanged);
     // voltReceiver.run();
-    let batteryPercentReceiver = new StatesReceiverDouble(
-      this.connection,
-      DoubleFields.BATTERY_PERCENT
-    );
-    batteryPercentReceiver.onDataReceived = this.callbackTo(
-      this.onBatteryPercentChanged
-    );
-    batteryPercentReceiver.run();
+    // let batteryPercentReceiver = new StatesReceiverDouble(
+    //   this.connection,
+    //   DoubleFields.BATTERY_PERCENT
+    // );
+    // batteryPercentReceiver.onDataReceived = this.callbackTo(
+    //   this.onBatteryPercentChanged
+    // );
+    // batteryPercentReceiver.run();
 
     /**
      * This receiver returns completed trips with GPS and Distance travelled (odoEnd - OdoStart)
@@ -185,40 +199,23 @@ class ExampleApp extends AppBase {
     // let tripReceiver = new TripReceiver(this.connection);
     // tripReceiver.onDataReceived = this.callbackTo(this.onTripReceived);
     // tripReceiver.run(
-    //   false, // Set to true if active links are need (i.e what tools are in the van during the trip)
+    //   true, // Set to true if active links are need (i.e what tools are in the van during the trip)
     //   true, // Include GPS coordinates
     //   true, // Include odometer start/end
-    //   ["180000C375FA"], // List of trackers, if null then all
-    //   null, // start date/time
+    //   null, // List of trackers, if null then all
+    //   '2023-03-09', // start date/time
     //   null, // end date/time
     //   120, // Ignore stops shorter than this period
-    //   false, // Set to true to get initial data from the server
+    //   true, // Set to true to get initial data from the server
     //   true // If true then events for new completed trips are sent
     // );
     /**
      * This subscription returns periods where trackers has been running. (Ignition true)
      * Has the same arguments as the above subscription (tripReceiver)
      */
-    /*
-    let workHoursReceiver = new WorkHoursReceiver(this.connection);
-    workHoursReceiver.onDataReceived = this.callbackTo(
-      this.onWorkHoursReceived
-    );
-    workHoursReceiver.run(
-      false,
-      false,
-      false,
-      ["180000C375FA"],
-      null,
-      null,
-      null,
-      true,
-      true
-    );
-    */
-    let tagPosReceiver = new TagPositionReceiver(this.connection);
-    tagPosReceiver.onDataReceived = this.callbackTo(this.onTagPositionReceived);
-    tagPosReceiver.run(true);
+    // let tagPosReceiver = new TagPositionReceiver(this.connection);
+    // tagPosReceiver.onDataReceived = this.callbackTo(this.onTagPositionReceived);
+    // tagPosReceiver.run(true);
   }
 
   async getCommittedVersion(mirror) {
