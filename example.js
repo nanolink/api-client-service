@@ -25,7 +25,7 @@ const {
 } = require("@nanolink/nanolink-tools/lib/receivers/gpsLogReceiver");
 
 const VolageRanges = [
-  { Low: 0.0, High: 13.0 },
+  { Low: 0.0, High: 13.2 },
   { Low: 16.0, High: 26.0 },
 ];
 
