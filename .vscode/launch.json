@@ -13,9 +13,8 @@
             ],
             "program": "${workspaceFolder}\\src\\index.js",
             "env": {
-                "CORESERVER": "https://mbndocker.nanolink.com:20100",
-                //"CORESERVER": "https://www.nanolink.com/core03",
-                "APITOKEN": "0a32625b856997d86305a12617430155"
+                "CORESERVER": "",
+                "APITOKEN": ""
             }
         },
         {
