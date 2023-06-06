@@ -3,9 +3,6 @@ const ws = require("ws");
 const { App } = require("./app");
 const { ExampleApp } = require("./example");
 
-/* 
-   This code initializes the framework, so that it is compatible with node.
-*/
 const coreserver = `${
   process.env.CORESERVER ?? "https://www.nanolink.com/corelocal"
 }/api/public`;

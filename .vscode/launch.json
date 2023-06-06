@@ -11,10 +11,11 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}\\index.js",
+            "program": "${workspaceFolder}\\src\\index.js",
             "env": {
-                "CORESERVER": "https://test01.nanolink.com:8032",
-                "APITOKEN": "<Insert valid API key here>"
+                "CORESERVER": "https://mbndocker.nanolink.com:20100",
+                //"CORESERVER": "https://www.nanolink.com/core03",
+                "APITOKEN": "0a32625b856997d86305a12617430155"
             }
         },
         {
