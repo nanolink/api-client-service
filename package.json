@@ -1,6 +1,6 @@
 {
   "name": "api-client-service",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Reference project using the Nanolink API",
   "main": "index.js",
   "scripts": {
