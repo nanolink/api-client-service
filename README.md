@@ -37,7 +37,7 @@ Edit the vscode launchsettings inside the file .vscode/launch.json and change th
 
 *APITOKEN*
 
-You can find the CORESERVER string and APITOKEN string in the [Nanolink Frontend](https://www.nanolink.com/cloud/#/general/system/) in the *system* section under *more*.
+You can find the CORESERVER string and APITOKEN string in the [Nanolink Frontend](https://www.nanolink.com/cloud/#/general/system/) in the *more* section under *system*.
 
 If you are just using node you can create a .ENV file which holds the two ENV variables accordingly. The above launchsettings file is just for launching (F5) the project directly in vscode enabling debugging and step through breakpoints.
 
