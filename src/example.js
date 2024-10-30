@@ -20,8 +20,8 @@ const {
   WorkHoursReceiver,
 } = require("@nanolink/nanolink-tools/lib/logreceivers/workHoursReceiver");
 const {
-  TagPositionReceiver,
-} = require("@nanolink/nanolink-tools/lib/receivers/tagPositionReceiver");
+  PositionReceiver,
+} = require("@nanolink/nanolink-tools/lib/receivers/positionReceiver");
 const {
   GPSLogReceiver,
 } = require("@nanolink/nanolink-tools/lib/logreceivers/gpsLogReceiver");
@@ -224,15 +224,15 @@ class ExampleApp extends AppBase {
    */
   async onReady() {
     console.log("Ready");
-    this.references = await this.connection.getMirror("references");
+    // this.references = await this.connection.getMirror("references");
     this.trackers = await this.connection.getMirror("trackers");
+    console.log('Got mirrors')
     /*
      * This code creates a Map between vID and ObjectId
      */
     this.vid2objectid = new Map();
     for (let tr of this.trackers.values()) {
       this.vid2objectid.set(tr.vID, tr.objId);
-      1;
     }
 
     /*
@@ -295,6 +295,9 @@ class ExampleApp extends AppBase {
     // let tagPosReceiver = new TagPositionReceiver(this.connection);
     // tagPosReceiver.onDataReceived = this.callbackTo(this.onTagPositionReceived);
     // tagPosReceiver.run(true);
+    let posReceiver = new PositionReceiver(this.connection);
+    posReceiver.onDataReceived = this.callbackTo(this.onPositionReceived);
+    posReceiver.run(true, true, ['1800007F6FFA', '180001E6CBFA']);
   }
 
   /**
@@ -496,7 +499,7 @@ class ExampleApp extends AppBase {
    * Called when transmitterlink is received from the nanolink system
    * @param {OTransmitterLink} tlink
    */
-  onTransmitterLinkUpdate(tlink) {
+  onTransmitterLinkUpdate(tlink) {    
     let link = tlink.nearest ?? tlink.newest;
     let antenna;
     if (link) {
@@ -554,6 +557,11 @@ class ExampleApp extends AppBase {
    * @param {*} data
    */
   onTagPositionReceived(data) {
+    if (data.vID != '1800007F6FFA') {
+      return;
+    }
+    console.log(data);
+    return;
     let antenna;
     if (data.link) {
       antenna = {
@@ -578,6 +586,28 @@ class ExampleApp extends AppBase {
 
   onIgnition(data) {
     console.log(data);
+  }
+  onPositionReceived(data) {
+    if (data.source == 'GPS') {
+      return;
+    }
+    let receiver = this.trackers.get(data.setBy);
+    let antenna = {
+      vID: data.setBy,
+      objId: receiver.id,
+      rSSI: data.rssi,
+      linkActive: data.source == 'Proximity',
+      lastUpdated: data.stamp,
+      longitude: data.longitude,
+      latitude: data.latitude,
+      trackerType: receiver.type,
+    }
+    let beaconPosition = {
+      vID: data.trackerVID,
+      objId: this.vid2objectid.get(data.trackerVID),
+      antenna: antenna,
+    };
+    console.log(beaconPosition);
   }
 }
 module.exports = { ExampleApp };

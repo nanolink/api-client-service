@@ -21,8 +21,9 @@
   },
   "homepage": "https://github.com/nanolink/api-client-service#readme",
   "dependencies": {
-    "@nanolink/nanolink-tools": "^1.0.39",
+    "@nanolink/nanolink-tools": "^1.0.69",
     "global-agent": "^3.0.0",
-    "level": "^7.0.1"
+    "level": "^7.0.1",
+    "ws": "^8.14.2"
   }
 }
