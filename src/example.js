@@ -23,6 +23,9 @@ const {
   PositionReceiver,
 } = require("@nanolink/nanolink-tools/lib/receivers/positionReceiver");
 const {
+  TagPositionReceiver,
+} = require("@nanolink/nanolink-tools/lib/receivers/tagPositionReceiver");
+const {
   GPSLogReceiver,
 } = require("@nanolink/nanolink-tools/lib/logreceivers/gpsLogReceiver");
 
@@ -289,15 +292,19 @@ class ExampleApp extends AppBase {
 
     
     /*
-     * This subscription returns periods where trackers has been running. (Ignition true)
-     * Has the same arguments as the above subscription (tripReceiver)
+     * This receiver returns the current position of a tracker (tag)
+     * Only if the tracker does not have active links
      */
     // let tagPosReceiver = new TagPositionReceiver(this.connection);
     // tagPosReceiver.onDataReceived = this.callbackTo(this.onTagPositionReceived);
     // tagPosReceiver.run(true);
+    
+    /*
+     * This receiver returns the current position of all trackers
+     */
     let posReceiver = new PositionReceiver(this.connection);
     posReceiver.onDataReceived = this.callbackTo(this.onPositionReceived);
-    posReceiver.run(true, true, ['1800007F6FFA', '180001E6CBFA']);
+    posReceiver.run(true, true);
   }
 
   /**
@@ -557,11 +564,8 @@ class ExampleApp extends AppBase {
    * @param {*} data
    */
   onTagPositionReceived(data) {
-    if (data.vID != '1800007F6FFA') {
-      return;
-    }
-    console.log(data);
-    return;
+    // console.log(data);
+    // return;
     let antenna;
     if (data.link) {
       antenna = {
@@ -588,19 +592,17 @@ class ExampleApp extends AppBase {
     console.log(data);
   }
   onPositionReceived(data) {
-    if (data.source == 'GPS') {
-      return;
-    }
     let receiver = this.trackers.get(data.setBy);
     let antenna = {
       vID: data.setBy,
-      objId: receiver.id,
-      rSSI: data.rssi,
-      linkActive: data.source == 'Proximity',
+      objId: this.vid2objectid.get(data.setBy),
+      rSSI: data.rSSI,
+      distance: data.distance,  
+      linkActive: data.source == 'PROXIMITY',
       lastUpdated: data.stamp,
       longitude: data.longitude,
       latitude: data.latitude,
-      trackerType: receiver.type,
+      trackerType: receiver?.type ?? 'Crowd',
     }
     let beaconPosition = {
       vID: data.trackerVID,
